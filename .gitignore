@@ -1,0 +1,4 @@
+node_modules/
+.wayfile/
+runs/
+bench/results/*.json
