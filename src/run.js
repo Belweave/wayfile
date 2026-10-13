@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join, dirname, resolve } from 'node:path';
 import { evaluate, get } from './logic.js';
+import { stubAsk } from './notify.js';
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 
@@ -43,8 +44,7 @@ async function decide(graph, node, state, opts) {
     if (out.next && node.routes.some((r) => r.to === out.next)) return { next: out.next, line: 0, how: 'script next', set };
   }
   if (node.kind === 'ask') {
-    // Local stub: the answer comes from state.stub.ask (default "yes"). No real Notify push.
-    const ans = get(state, 'stub.ask') ?? 'yes';
+    const { answer: ans } = await (opts.ask || stubAsk)({ node, state }); // stub unless a Notify backend is passed
     set = { [node.sets[0] || 'ask.answer']: ans };
     setPath(state, node.sets[0] || 'ask.answer', ans);
   }
