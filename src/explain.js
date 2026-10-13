@@ -20,7 +20,8 @@ export async function explain(graph, input, opts) {
     const tok = s.usage ? ` [${s.usage.input}+${s.usage.output} tok]` : s.cached ? ' [memo]' : '';
     return `${i + 1}. ${s.node}${s.next ? ` → ${s.next}` : ' (end)'}  via ${s.how}  @ ${at}${tok}`;
   });
-  return { text: [...lines, `model calls: ${r.calls}, tokens in/out: ${r.usage.input}/${r.usage.output}`].join('\n'), result: r };
+  const cost = r.usage.cost ? `, cost $${r.usage.cost.toFixed(6)}` : '';
+  return { text: [...lines, `model calls: ${r.calls}, tokens in/out: ${r.usage.input}/${r.usage.output}${cost}`].join('\n'), result: r };
 }
 
 const label = (r) => (r.type === 'otherwise' ? 'otherwise' : r.type === 'judge' ? `judge: ${r.src}` : r.src).replace(/"/g, '#quot;').replace(/\|/g, '#124;');

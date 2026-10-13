@@ -65,7 +65,9 @@ export async function check(graph) {
   if (!graph.entry) add(graph.dir, 0, 'error', 'no entry node', 'add `entry: true` to one node');
   for (const n of nodes) {
     n.errors.forEach((e) => add(n.file, e.line, 'error', e.msg, e.fix));
-    if (!['route', 'judge', 'script', 'ask', 'end'].includes(n.kind)) add(n.file, 2, 'error', `unknown kind "${n.kind}"`, 'use route | judge | script | ask | end');
+    if (!['route', 'judge', 'script', 'ask', 'skill', 'end'].includes(n.kind)) add(n.file, 2, 'error', `unknown kind "${n.kind}"`, 'use route | judge | script | ask | skill | end');
+    if (n.meta.skill && !n.skillText) add(n.file, 2, 'error', `skill file skills/${n.meta.skill}.md not found`, 'create it or fix `skill:`');
+    if (n.kind === 'skill' && n.routes.some((r) => r.type === 'judge')) add(n.file, 2, 'warn', 'skill node with judge routes makes two model calls', 'route on the skill output deterministically');
     for (const r of n.routes) if (!graph.nodes[r.to]) add(n.file, r.line, 'error', `route target [[${r.to}]] does not exist`, `create ${r.to}.md or fix the link`);
     if (n.kind !== 'end' && n.routes.length && !n.routes.some((r) => r.type === 'otherwise')) add(n.file, n.routes.at(-1).line, 'error', 'missing `otherwise` route', 'add `- otherwise → [[node]]` as the last route');
     if (n.kind !== 'end' && !n.routes.length) add(n.file, 1, 'error', 'non-end node has no routes', 'add a `## Routes` list or set `kind: end`');
@@ -100,7 +102,7 @@ export async function check(graph) {
     const anc = new Set(); const st = [...(preds[n.id] || [])];
     while (st.length) { const p = st.pop(); if (anc.has(p)) continue; anc.add(p); (preds[p] || []).forEach((x) => st.push(x)); }
     const avail = new Set(inputs); anc.forEach((a) => graph.nodes[a].sets.forEach((k) => avail.add(k)));
-    if (n.kind === 'ask' || n.kind === 'judge') n.sets.forEach((k) => avail.add(k)); // set before routing
+    if (['ask', 'judge', 'skill'].includes(n.kind)) n.sets.forEach((k) => avail.add(k)); // set before routing
     if (n.kind === 'script') n.sets.forEach((k) => avail.add(k));
     for (const k of n.needs) if (!avail.has(k) && !avail.has(k.split('.')[0])) add(n.file, 2, 'error', `needs \`${k}\` but no upstream node sets it`, `add it to an upstream \`sets\` or to the entry node's needs`);
   }

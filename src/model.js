@@ -10,7 +10,7 @@ export function judgePrompt(graph, node, state, targets) {
   const needs = Object.fromEntries(node.needs.map((k) => [k, k.split('.').reduce((o, p) => o?.[p], state)]));
   const questions = node.routes.filter((r) => r.type === 'judge').map((r) => `- ${r.src} → ${r.to}`).join('\n');
   return {
-    system: `${PREAMBLE}\n\n# Graph\n${graphIndex(graph)}`,
+    system: `${PREAMBLE}\n\n${graph.instructions ? `# Agent instructions\n${graph.instructions}\n\n` : ''}# Graph\n${graphIndex(graph)}`,
     user: `# Node ${node.id}\n${node.body}\n\n## Questions\n${questions}\n\nAllowed targets: ${JSON.stringify(targets)}\n\n## State\n${JSON.stringify(needs)}`,
   };
 }
@@ -34,6 +34,17 @@ export function anthropic({ apiKey = process.env.ANTHROPIC_API_KEY, model = proc
       stop: j.stop_reason,
       usage: { input: n0(u.input_tokens), output: n0(u.output_tokens), cacheRead: n0(u.cache_read_input_tokens), cacheWrite: n0(u.cache_creation_input_tokens), cost: null },
     };
+  };
+}
+
+// Skill node: one model call whose instructions (node body + optional skills/<name>.md) load only here.
+// The reply text is written to the node's first `sets` key; routing after it stays deterministic.
+export function makeSkill(call) {
+  return async (graph, node, state) => {
+    const needs = Object.fromEntries(node.needs.map((k) => [k, k.split('.').reduce((o, p) => o?.[p], state)]));
+    const system = `${graph.instructions || 'You are a careful assistant.'}\n\n# Skill: ${node.title}\n${node.body}${node.skillText ? `\n\n${node.skillText}` : ''}\n\nReply with the result only.`;
+    const r = await call({ system, messages: [{ role: 'user', content: JSON.stringify(needs) }], maxTokens: node.meta.max_tokens || 800 });
+    return { text: r.text.trim(), usage: r.usage };
   };
 }
 

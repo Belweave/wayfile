@@ -37,18 +37,28 @@ function runScript(graph, node, state) {
 // Decide the next node. Returns {next, line, how, set, usage}.
 async function decide(graph, node, state, opts) {
   let set = {};
+  let pre = null; // usage spent before routing (skill nodes)
+  const done = (r) => (pre ? { ...r, usage: r.usage ? Object.fromEntries(Object.keys(pre).map((k) => [k, (pre[k] || 0) + (r.usage[k] || 0)])) : pre } : r);
+  if (node.kind === 'skill') {
+    if (!opts.skill) throw new Error(`${node.file}: skill node needs a model (set OPENROUTER_API_KEY)`);
+    const out = await opts.skill(graph, node, state);
+    pre = out.usage;
+    const key = node.sets[0] || `${node.id}.output`;
+    set = { [key]: out.text };
+    setPath(state, key, out.text);
+  }
   if (node.kind === 'script') {
     const out = runScript(graph, node, state);
     set = Object.fromEntries(Object.entries(out.set).filter(([k]) => node.sets.includes(k)));
     for (const [k, v] of Object.entries(set)) setPath(state, k, v);
-    if (out.next && node.routes.some((r) => r.to === out.next)) return { next: out.next, line: 0, how: 'script next', set };
+    if (out.next && node.routes.some((r) => r.to === out.next)) return done({ next: out.next, line: 0, how: 'script next', set });
   }
   if (node.kind === 'ask') {
     const { answer: ans } = await (opts.ask || stubAsk)({ node, state }); // stub unless a Notify backend is passed
     set = { [node.sets[0] || 'ask.answer']: ans };
     setPath(state, node.sets[0] || 'ask.answer', ans);
   }
-  for (const r of node.routes) if (r.type === 'when' && evaluate(r.rule, state)) return { next: r.to, line: r.line, how: `\`${r.src}\``, set };
+  for (const r of node.routes) if (r.type === 'when' && evaluate(r.rule, state)) return done({ next: r.to, line: r.line, how: `\`${r.src}\``, set });
   const judges = node.routes.filter((r) => r.type === 'judge');
   const other = node.routes.find((r) => r.type === 'otherwise');
   if (judges.length && opts.judge) {
@@ -57,12 +67,12 @@ async function decide(graph, node, state, opts) {
     if (targets.includes(j.target)) {
       const r = judges.find((x) => x.to === j.target) || other;
       if (node.kind === 'judge' && node.sets[0]) { set[node.sets[0]] = j.target; setPath(state, node.sets[0], j.target); }
-      return { next: j.target, line: r.line, how: `judge: "${r.src}"`, set, usage: j.usage };
+      return done({ next: j.target, line: r.line, how: `judge: "${r.src}"`, set, usage: j.usage });
     }
-    if (other) return { next: other.to, line: other.line, how: 'otherwise (judge gave no valid target)', set, usage: j.usage };
+    if (other) return done({ next: other.to, line: other.line, how: 'otherwise (judge gave no valid target)', set, usage: j.usage });
   }
-  if (other) return { next: other.to, line: other.line, how: judges.length ? 'otherwise (no judge configured)' : 'otherwise', set, noCache: judges.length > 0 };
-  return { next: null, line: 0, how: 'end', set };
+  if (other) return done({ next: other.to, line: other.line, how: judges.length ? 'otherwise (no judge configured)' : 'otherwise', set, noCache: judges.length > 0 });
+  return done({ next: null, line: 0, how: 'end', set });
 }
 
 export async function run(graph, input, opts = {}) {

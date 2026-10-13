@@ -1,5 +1,5 @@
 // Parse one Markdown node file: frontmatter, title, body, routes list, example blocks.
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { compile } from './logic.js';
 
@@ -68,11 +68,16 @@ export function parseNode(text, file = 'node.md') {
 
 export function loadGraph(dir) {
   const nodes = {};
-  for (const f of readdirSync(dir).filter((f) => f.endsWith('.md') && f !== 'README.md').sort()) {
+  for (const f of readdirSync(dir).filter((f) => f.endsWith('.md') && f !== 'README.md' && f !== 'AGENT.md').sort()) {
     const file = join(dir, f);
     const n = parseNode(readFileSync(file, 'utf8'), file);
     nodes[n.id] = n;
   }
+  for (const n of Object.values(nodes)) {
+    const sf = n.meta.skill && join(dir, 'skills', `${n.meta.skill}.md`);
+    if (sf && existsSync(sf)) n.skillText = readFileSync(sf, 'utf8');
+  }
   const entry = Object.values(nodes).find((n) => n.meta.entry === true)?.id;
-  return { dir, nodes, entry };
+  const af = join(dir, 'AGENT.md'); // always-on instructions, like Eve's instructions.md
+  return { dir, nodes, entry, instructions: existsSync(af) ? readFileSync(af, 'utf8').trim() : '' };
 }
