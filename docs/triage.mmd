@@ -1,0 +1,17 @@
+flowchart TD
+  account_help(("account-help"))
+  ask_approval(["ask-approval"])
+  bug_intake(("bug-intake"))
+  general_reply(("general-reply"))
+  lookup_order[/"lookup-order"/]
+  refund(("refund"))
+  triage{{"triage"}}
+  ask_approval -->|"approval == #quot;yes#quot;"| lookup_order
+  ask_approval -->|"otherwise"| general_reply
+  lookup_order -->|"order.status == #quot;not_found#quot;"| general_reply
+  lookup_order -->|"otherwise"| refund
+  triage -->|"ticket.amount > 500 && ticket.body ~ /refund#124;chargeback#124;money back/i"| ask_approval
+  triage -->|"ticket.body ~ /refund#124;chargeback#124;money back/i"| lookup_order
+  triage -->|"ticket.body ~ /password#124;log ?in#124;2fa#124;locked out/i"| account_help
+  triage -.->|"judge: is this a bug report with steps to reproduce?"| bug_intake
+  triage -->|"otherwise"| general_reply
