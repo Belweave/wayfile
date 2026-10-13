@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadGraph } from '../src/parse.js';
 import { check, format } from '../src/check.js';
 import { explain, mermaid, edgeDiff } from '../src/explain.js';
-import { anthropic, makeJudge } from '../src/model.js';
+import { provider, makeJudge } from '../src/model.js';
 import { notifyAsk } from '../src/notify.js';
 
 const [cmd, dir, arg] = process.argv.slice(2);
@@ -17,7 +17,7 @@ const usage = `usage:
 if (!cmd || !dir) { console.error(usage); process.exit(2); }
 const graph = loadGraph(dir);
 const input = () => JSON.parse(arg.trim().startsWith('{') ? arg : readFileSync(arg, 'utf8'));
-const judge = () => (process.env.ANTHROPIC_API_KEY ? makeJudge(anthropic()) : null);
+const judge = () => { const p = provider(); return p ? makeJudge(p) : null; };
 // ask nodes stay stubbed unless WAYFILE_NOTIFY=live (real phone prompt).
 const opts = () => ({ judge: judge(), ask: process.env.WAYFILE_NOTIFY === 'live' ? notifyAsk() : undefined, cacheDir: join(dir, '.wayfile/cache'), traceDir: join(dir, 'runs') });
 

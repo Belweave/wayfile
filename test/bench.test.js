@@ -19,7 +19,7 @@ test('bash baseline: policy in prompt, runs tools, sums usage', async () => {
   const seen = [];
   const call = async (req) => { seen.push(structuredClone(req)); return replies.shift(); };
   const r = await agent('bash', call, tickets[0]);
-  assert.deepEqual(r, { end: 'refund', calls: 2, steps: 2, usage: { input: 20, output: 4, cacheRead: 2, cacheWrite: 0 } });
+  assert.deepEqual(r, { end: 'refund', calls: 2, steps: 2, usage: { input: 20, output: 4, cacheRead: 2, cacheWrite: 0, cost: 0 } });
   assert.deepEqual(seen[0].tools.map((t) => t.name), ['bash']);
   assert.match(JSON.stringify(seen[1].messages.at(-1)), /delivered/);
 });
@@ -55,4 +55,26 @@ test('summarize counts accuracy and model-step share', () => {
   const rows = [{ expect: 'a', x: { end: 'a', calls: 1, steps: 2, usage: { input: 5, output: 1, cacheRead: 0, cacheWrite: 0 }, ms: 3 } }, { expect: 'b', x: { end: 'c', calls: 0, steps: 2, usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, ms: 1 } }];
   const s = summarize(rows, 'x', PRICES['claude-haiku-4-5']);
   assert.equal(s.correct, 1); assert.equal(s.modelStepShare, 0.25); assert.equal(s.tokens, 6);
+});
+
+test('openrouter adapter: maps tools both ways, reads usage.cost, cost guard stops', async () => {
+  const { openrouter } = await import('../src/model.js');
+  const bodies = [];
+  const fetchFn = async (url, init) => {
+    bodies.push(JSON.parse(init.body));
+    return Response.json({ model: 'm', choices: [{ finish_reason: 'tool_calls', message: { content: null, tool_calls: [{ id: 'c1', type: 'function', function: { name: 'bash', arguments: '{"cmd":"ls"}' } }] } }],
+      usage: { prompt_tokens: 100, completion_tokens: 7, cost: 2, prompt_tokens_details: { cached_tokens: 30, cache_write_tokens: 10 } } });
+  };
+  const call = openrouter({ apiKey: 'test', maxUsd: 3, fetchFn });
+  const r = await call({ system: 's', messages: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: [{ type: 'tool_use', id: 'c0', name: 'bash', input: { cmd: 'pwd' } }] }, { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'c0', content: '/x' }] }], tools: [{ name: 'bash', description: 'd', input_schema: { type: 'object' } }] });
+  assert.deepEqual(r.content, [{ type: 'tool_use', id: 'c1', name: 'bash', input: { cmd: 'ls' } }]);
+  assert.deepEqual(r.usage, { input: 60, output: 7, cacheRead: 30, cacheWrite: 10, cost: 2 });
+  const b = bodies[0];
+  assert.deepEqual(b.usage, { include: true });
+  assert.equal(b.tools[0].function.name, 'bash');
+  assert.deepEqual(b.messages.slice(2).map((m) => m.role), ['assistant', 'tool']);
+  assert.equal(b.messages[2].tool_calls[0].function.arguments, '{"cmd":"pwd"}');
+  await call({ system: 's', messages: [{ role: 'user', content: 'x' }] }); // spent 4 now
+  await assert.rejects(call({ system: 's', messages: [{ role: 'user', content: 'x' }] }), /cost guard/);
+  assert.equal(bodies.length, 2);
 });

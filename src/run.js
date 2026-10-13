@@ -28,7 +28,7 @@ function memoKey(graph, node, state) {
 function runScript(graph, node, state) {
   const p = scriptPath(graph, node);
   const r = spawnSync(p, [], { input: JSON.stringify(state), encoding: 'utf8', timeout: 10000, cwd: dirname(p) });
-  if (r.error) throw r.error;
+  if (r.error && r.error.code !== 'EPIPE') throw r.error; // EPIPE: script exited without reading stdin
   if (r.status !== 0) throw new Error(`${node.file}: script exited ${r.status}: ${(r.stderr || '').slice(0, 200)}`);
   const out = JSON.parse(r.stdout); // raw stdout never enters model context
   return { set: out.set || {}, next: out.next };
@@ -96,7 +96,7 @@ export async function run(graph, input, opts = {}) {
   const usage = steps.reduce((a, s) => {
     if (s.usage) for (const k of Object.keys(a)) a[k] += s.usage[k] || 0;
     return a;
-  }, { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
+  }, { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0 });
   const calls = steps.filter((s) => s.usage).length;
   const result = { end: steps.at(-1)?.node, steps, state, usage, calls };
   if (opts.traceDir) writeTrace(graph, input, result, opts.traceDir);

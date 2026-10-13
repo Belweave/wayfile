@@ -47,12 +47,12 @@ export async function agent(kind, call, c, maxTurns = 8) {
   const system = kind === 'eve' ? eveSystem(g) : bashSystem(g);
   const tools = kind === 'eve' ? [SKILL, BASH] : [BASH];
   const messages = [{ role: 'user', content: `${g === 'triage' ? 'Ticket' : 'Failed CI job'}: ${JSON.stringify(c.input)}` }];
-  const usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+  const usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0 };
   let calls = 0;
   for (let t = 0; t < maxTurns; t++) {
     const r = await call({ system, messages, tools, maxTokens: 400 });
     calls++;
-    for (const k of Object.keys(usage)) usage[k] += r.usage[k];
+    for (const k of Object.keys(usage)) usage[k] += r.usage[k] || 0;
     messages.push({ role: 'assistant', content: r.content });
     const uses = r.content.filter((x) => x.type === 'tool_use');
     if (!uses.length) return { end: r.text.match(/"route"\s*:\s*"([\w-]+)"/)?.[1] ?? null, calls, steps: calls, usage };
