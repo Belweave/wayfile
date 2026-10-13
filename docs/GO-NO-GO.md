@@ -1,25 +1,22 @@
-# Wayfile MVP: go/no-go (2026-10-13)
+# Wayfile MVP: go/no-go (updated 2026-10-13)
 
-**Decision: pending. The token half of the gate cannot be evaluated yet.** The box has no LLM API key, so neither arm of the benchmark has been run against a real model, and no token figure in VISION.md §3 has been replaced. Nothing below is estimated to fill that gap.
+**Decision: PENDING. `ANTHROPIC_API_KEY` is absent from the box, and that is the only blocker.** No arm has been run against a model. No token, cost or latency figure exists, and none is estimated here.
 
-## What was measured (no model involved)
-`node bench/run.js --dry`: the triage graph run over the 50 tickets in `bench/tickets.js`, with judge forks returning no answer.
-- 30 of 50 tickets (60%) reached an end node through deterministic routes and scripts alone: **0 model calls**, and all 30 were correct.
-- 20 of 50 reached the one `judge:` fork (10 bug reports, 10 general questions). That is C = 1 call per ticket at most, against VISION's estimated C = 6–8 for ReAct.
-- Judge nodes: 1 of 7 (14%), under the 40% kill threshold. This is a fact about our own graph, not evidence it generalises.
-- Memo replay of an identical ticket: 0 calls (unit test `memoization`).
-
-Caveat: the ticket set is synthetic and written by the same author as the graph, so the deterministic hit rate is optimistic. Paraphrased tickets are the known weakness (VISION §4).
-
-## Gate (VISION §6)
+## Gate
 | Criterion | Status |
 |---|---|
-| Tokens ≥5× lower than baseline at equal or better accuracy | **Not measured.** Needs a key. |
-| Kill: baseline matches accuracy at <3× tokens | **Not measured.** |
-| Kill: >40% of nodes are judges | Passes (14%). |
+| GO: ≥5× fewer tokens than both bash/ReAct and Eve-style, at ≥ their accuracy | not measured |
+| NO-GO: bash within 3× of Wayfile tokens at ≥ Wayfile accuracy | not measured |
+| NO-GO: >40% of nodes need the model | **ok: 2 of 18 nodes are judges (11%)** |
+
+## Measured without a model (`./bench.sh` dry run, 70 cases)
+- 55/70 cases routed correctly with **0 model calls** (judge forks given no answer).
+- 24 of 109 routing steps (22%) reach a judge fork: 20 tickets (bug vs general) and 4 CI test failures (caused by the diff or not). Those are the only places Wayfile can spend tokens, at 1 call per case at most.
+- The best Wayfile can score even with a perfect judge is **68/70**. Two CI cases are deliberate paraphrases ("connection dropped", "flake8 complained") that the regex routes miss and send to `human-triage`. That is the brittleness VISION §4 predicted, and it is now measured.
+- Labels: rewritten from the prose policy alone (bench/LABELING.md). They agree 50/50 with the first-round ticket labels. A model labelling check (`bench/label.js`) is waiting on the key.
 
 ## To finish
-Put `ANTHROPIC_API_KEY` on the box (optionally `WAYFILE_MODEL`), then run `node bench/run.js`. It runs both arms on the same model and writes `bench/results/full-*.json` with per-ticket end node, calls, latency, and input/output/cache-read/cache-write tokens taken from each response's `usage`. Go if wayfile's total effective tokens are ≥5× lower at ≥ baseline accuracy.
+Put `ANTHROPIC_API_KEY` on the box and run `./bench.sh`. It runs model labelling, then all three arms on `claude-haiku-4-5` (override with `WAYFILE_MODEL`). It writes `bench/results/full-summary.md` and `full.json` with input/output/cache-read/cache-write tokens from each response's `usage`, cost from the price table in `bench/run.js` (docs.claude.com pricing, read 2026-10-13: Haiku 4.5 $1 in, $5 out, $1.25 cache write, $0.10 cache read per MTok), accuracy, median latency, and the GO/NO-GO line computed by the rules above. Note: prompts here are short, so they may fall under the provider's minimum cacheable length, and cache tokens may read 0 for every arm. That would be a measured result, not a bug.
 
 ## Deferred until a yes
-Notify `ask:` wiring (the `ask` node is a local stub), self-hardening, and an OpenAI adapter.
+Real Notify sends (the backend exists behind `WAYFILE_NOTIFY=live`; see docs/NOTIFY.md for the project/accent gap), self-hardening, and an OpenAI adapter.

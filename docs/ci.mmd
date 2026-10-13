@@ -1,0 +1,25 @@
+flowchart TD
+  ask_security(["ask-security"])
+  autofix_lint(("autofix-lint"))
+  check_flaky[/"check-flaky"/]
+  ci_failure["ci-failure"]
+  diagnose{{"diagnose"}}
+  fix_code(("fix-code"))
+  fix_deps(("fix-deps"))
+  human_triage(("human-triage"))
+  quarantine_test(("quarantine-test"))
+  retry_job(("retry-job"))
+  rotate_secret(("rotate-secret"))
+  ask_security -->|"security.approval == #quot;yes#quot;"| rotate_secret
+  ask_security -->|"otherwise"| human_triage
+  check_flaky -->|"test.flaky == true"| quarantine_test
+  check_flaky -->|"otherwise"| diagnose
+  ci_failure -->|"ci.log ~ /AKIA[0-9A-Z]{16}#124;private key#124;secret (leaked#124;detected#124;exposed)#124;token leaked/i"| ask_security
+  ci_failure -->|"ci.log ~ /ETIMEDOUT#124;ECONNRESET#124;503 Service Unavailable#124;rate limit#124;socket hang up/i && ci.attempt < 3"| retry_job
+  ci_failure -->|"ci.log ~ /ETIMEDOUT#124;ECONNRESET#124;503 Service Unavailable#124;rate limit#124;socket hang up/i"| human_triage
+  ci_failure -->|"ci.log ~ /ERESOLVE#124;lockfile#124;integrity checksum#124;Could not resolve dependency/i"| fix_deps
+  ci_failure -->|"ci.log ~ /eslint#124;prettier#124;lint error/i"| autofix_lint
+  ci_failure -->|"ci.log ~ /FAIL #124;AssertionError#124;Expected:.*Received:/"| check_flaky
+  ci_failure -->|"otherwise"| human_triage
+  diagnose -.->|"judge: was the failure caused by the files changed in this PR?"| fix_code
+  diagnose -->|"otherwise"| human_triage
