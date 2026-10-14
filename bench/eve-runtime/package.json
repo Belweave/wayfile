@@ -1,0 +1,21 @@
+{
+  "name": "wayfile-eve-runtime-benchmark",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "verify": "node verify.mjs",
+    "verify:schema": "node verify-schema.mjs",
+    "run": "node run.js",
+    "test": "node --test --test-concurrency=2 test/*.test.mjs",
+    "dev:mock": "node serve.mjs --mode mock"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "3.0.68",
+    "eve": "0.79.0",
+    "zod": "4.1.12"
+  }
+}

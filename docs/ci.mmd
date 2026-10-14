@@ -2,11 +2,12 @@ flowchart TD
   ask_security(["ask-security"])
   autofix_lint(("autofix-lint"))
   check_flaky[/"check-flaky"/]
-  ci_failure["ci-failure"]
+  ci_failure{{"ci-failure"}}
   diagnose{{"diagnose"}}
   fix_code(("fix-code"))
   fix_deps(("fix-deps"))
   human_triage(("human-triage"))
+  infra_failure["infra-failure"]
   quarantine_test(("quarantine-test"))
   retry_job(("retry-job"))
   rotate_secret(("rotate-secret"))
@@ -14,12 +15,19 @@ flowchart TD
   ask_security -->|"otherwise"| human_triage
   check_flaky -->|"test.flaky == true"| quarantine_test
   check_flaky -->|"otherwise"| diagnose
-  ci_failure -->|"ci.log ~ /AKIA[0-9A-Z]{16}#124;private key#124;secret (leaked#124;detected#124;exposed)#124;token leaked/i"| ask_security
-  ci_failure -->|"ci.log ~ /ETIMEDOUT#124;ECONNRESET#124;503 Service Unavailable#124;rate limit#124;socket hang up/i && ci.attempt < 3"| retry_job
-  ci_failure -->|"ci.log ~ /ETIMEDOUT#124;ECONNRESET#124;503 Service Unavailable#124;rate limit#124;socket hang up/i"| human_triage
-  ci_failure -->|"ci.log ~ /ERESOLVE#124;lockfile#124;integrity checksum#124;Could not resolve dependency/i"| fix_deps
-  ci_failure -->|"ci.log ~ /eslint#124;prettier#124;lint error/i"| autofix_lint
-  ci_failure -->|"ci.log ~ /FAIL #124;AssertionError#124;Expected:.*Received:/"| check_flaky
+  ci_failure -->|"ci.log ~ /AKIA[0-9A-Z]{16}#124;-----BEGIN (?:RSA #124;EC #124;OPENSSH )?PRIVATE KEY-----#124;(?:^#124;\n)\s*(?:warning:\s*)?(?:GitHub #124;access #124;API #124;refresh )?token leaked\b#124;(?:^#124;\n)\s*(?:warning:\s*)?secret (?:leaked#124;detected#124;exposed)\b/i"| ask_security
+  ci_failure -->|"ci.log ~ /^\s*(?:fetch failed:\s*ETIMEDOUT#124;ECONNRESET while[^\n]+#124;503 Service Unavailable(?:\s+from[^\n]+)?#124;error:\s*(?:ETIMEDOUT#124;ECONNRESET#124;socket hang up)#124;(?:network#124;fetch#124;download) (?:error#124;failed):\s*(?:socket hang up#124;rate limit))\s*$/i"| infra_failure
+  ci_failure -->|"ci.log ~ /(?:^#124;\n)\s*(?:npm ERR!\s+code ERESOLVE\b#124;ERR_PNPM_OUTDATED_LOCKFILE\b#124;(?:error:\s*)?integrity checksum failed\b#124;(?:error:\s*)?Could not resolve dependency\b)/i"| fix_deps
+  ci_failure -->|"ci.log ~ /(?:^#124;\n)\s*(?:eslint:\s*[✖×]?\s*[1-9]\d*\s+problems\b#124;prettier --check failed\b#124;lint error:\s*\S)/i"| autofix_lint
+  ci_failure -->|"ci.log ~ /(?:^#124;\n)\s*(?:FAIL\s+\S#124;AssertionError:\s*\S)/"| check_flaky
+  ci_failure -.->|"judge: does the log expose a credential, private key, leaked token or secret?"| ask_security
+  ci_failure -.->|"judge: does affirmative evidence establish the primary failure as transient transport or upstream trouble (timeout, reset, dropped connection, rate limit, temporary upstream unavailability), excluding resource/capacity/quota exhaustion, process termination, local runtime/build errors, permanent configuration/authentication failures and incidental network messages?"| infra_failure
+  ci_failure -.->|"judge: is this a dependency resolution, checksum or lockfile failure?"| fix_deps
+  ci_failure -.->|"judge: is this a lint or formatting failure?"| autofix_lint
+  ci_failure -.->|"judge: does a test actually fail?"| check_flaky
   ci_failure -->|"otherwise"| human_triage
   diagnose -.->|"judge: was the failure caused by the files changed in this PR?"| fix_code
   diagnose -->|"otherwise"| human_triage
+  infra_failure -->|"ci.attempt == 1"| retry_job
+  infra_failure -->|"ci.attempt == 2"| retry_job
+  infra_failure -->|"otherwise"| human_triage

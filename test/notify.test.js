@@ -1,17 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadGraph } from '../src/parse.js';
-import { run } from '../src/run.js';
-import { notifyAsk, notifyRequest, stubAsk } from '../src/notify.js';
+import { loadGraph } from '../packages/wayfile/src/parse.js';
+import { run } from '../packages/wayfile/src/run.js';
+import { notifyAsk, notifyRequest, stubAsk } from '../packages/wayfile/src/notify.js';
 
 const triage = loadGraph(new URL('../examples/triage', import.meta.url).pathname);
 const state = { ticket: { body: 'refund order 2', amount: 900 } };
 
-test('stub is the default and sends nothing', async () => {
-  assert.deepEqual(await stubAsk({ state: {} }), { answer: 'yes', via: 'stub' });
+test('test approvals must be explicit and send nothing', async () => {
+  await assert.rejects(stubAsk({ state: {} }), /explicit state.stub.ask/);
+  assert.deepEqual(await stubAsk({ state: { stub: { ask: 'yes' } } }), { answer: 'yes', via: 'stub' });
   const orig = globalThis.fetch;
   globalThis.fetch = () => { throw new Error('network used'); };
-  try { assert.equal((await run(triage, state)).end, 'refund'); } finally { globalThis.fetch = orig; }
+  try {
+    await assert.rejects(run(triage, state), /approval backend/);
+    assert.equal((await run(triage, { ...state, stub: { ask: 'yes' } })).end, 'refund');
+  } finally { globalThis.fetch = orig; }
 });
 
 test('request shape follows POST /interactions; key is stable', () => {
@@ -21,7 +25,7 @@ test('request shape follows POST /interactions; key is stable', () => {
   assert.match(a.idempotencyKey, /^wayfile-ask-approval-[0-9a-f]{24}$/);
   assert.deepEqual(Object.keys(a.body).sort(), ['expiresInSeconds', 'kind', 'prompt', 'title']);
   assert.equal(a.body.kind, 'approval');
-  assert.equal(a.project, 'Chief Engineer');
+  assert.equal(a.project, 'Wayfile');
   assert.match(a.body.prompt, /"ticket.amount":900/);
 });
 
@@ -46,4 +50,35 @@ test('live backend against a mock fetch: create, wait, map denied → no', async
 test('live backend refuses to start without a token', () => {
   const saved = process.env.NOTIFY_TOKEN; delete process.env.NOTIFY_TOKEN;
   try { assert.throws(() => notifyAsk(), /NOTIFY_TOKEN/); } finally { if (saved) process.env.NOTIFY_TOKEN = saved; }
+});
+
+test('live approval keys are unique per invocation so repeated tasks cannot reuse approval', async () => {
+  const keys = [];
+  const fetchFn = async (url, init = {}) => {
+    if (init.method === 'POST') {
+      keys.push(init.headers['idempotency-key']);
+      return Response.json({ interaction: { id: `int_${keys.length}`, status: 'pending' } });
+    }
+    return Response.json({ interaction: { id: `int_${keys.length}`, status: 'approved' }, timedOut: false });
+  };
+  const ask = notifyAsk({ token: 'test', fetchFn });
+  const request = { node: triage.nodes['ask-approval'], state };
+  assert.equal((await ask(request)).answer, 'yes');
+  assert.equal((await ask(request)).answer, 'yes');
+  assert.equal(new Set(keys).size, 2);
+});
+
+test('malformed Notify replies cannot be interpreted as an approval', async () => {
+  const fetchFn = async (url, init = {}) => init.method === 'POST'
+    ? Response.json({ interaction: { id: 'int_1' } })
+    : Response.json({ interaction: { status: 'unknown' }, timedOut: false });
+  await assert.rejects(notifyAsk({ token: 'test', fetchFn })({ node: triage.nodes['ask-approval'], state }), /unsupported interaction status/);
+});
+
+test('approval prompts never truncate the identity or decision evidence', async () => {
+  let calls = 0;
+  const ask = notifyAsk({ token: 'test', fetchFn: async () => { calls++; } });
+  const long = { ...triage.nodes['ask-approval'], body: 'a'.repeat(2001) };
+  await assert.rejects(ask({ node: long, state }), /exceeds 2000 characters/);
+  assert.equal(calls, 0);
 });

@@ -1,0 +1,1 @@
+{"name":"wayfile-eve-evidence-fixture","private":true,"type":"module","engines":{"node":">=24"},"dependencies":{"eve":"0.79.0"}}

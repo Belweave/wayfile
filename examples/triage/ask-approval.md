@@ -1,6 +1,6 @@
 ---
 kind: ask
-needs: [ticket.amount]
+needs: [ticket.body, ticket.amount]
 sets: [approval]
 ---
 # Ask for refund approval

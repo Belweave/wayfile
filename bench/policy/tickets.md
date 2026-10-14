@@ -2,8 +2,11 @@
 
 Route each support ticket to exactly one outcome: refund, general-reply, account-help, bug-intake.
 
-1. A request for a refund, a chargeback, or money back is a refund request.
-   - If the amount is over $500, a human must approve first. For this benchmark, assume the human approves.
+Apply the first rule that fits. Interpret the customer's actual request; a negated request, quoted log text, or question about policy is not a request to perform that action. Missing ticket text → general-reply.
+
+1. A request for a refund, a chargeback, reimbursement, or money back is a refund request.
+   - The amount must be a finite nonnegative number. Missing, negative, or nonnumeric amount → general-reply to ask for clarification.
+   - If the amount is over $500, a human must approve first. For this benchmark call ask_approval to obtain an explicitly simulated answer (yes by default; supplied no means denial). Denial → general-reply. Approval must precede the order lookup.
    - Then look up the order named in the ticket. If the ticket names no order number, or the order cannot be found, the outcome is general-reply. Otherwise the outcome is refund.
 2. Trouble with a password, logging in, two-factor codes, or being locked out → account-help.
 3. A bug report that includes steps to reproduce → bug-intake.

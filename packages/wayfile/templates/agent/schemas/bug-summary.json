@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "observed", "reproductionSteps", "missingDetails"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "observed": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "reproductionSteps": { "type": "array", "maxItems": 20, "items": { "type": "string", "minLength": 1 } },
+    "missingDetails": { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1 } }
+  }
+}

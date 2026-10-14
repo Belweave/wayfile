@@ -1,0 +1,45 @@
+{
+  "tool": "image_gen.imagegen (built-in)",
+  "date": "2026-10-13",
+  "palette": {
+    "yellow": "#FFD600",
+    "black": "#111111"
+  },
+  "assets": [
+    {
+      "file": "wayfile-mark.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "source": "exec-173acc57-281d-4acd-ac7b-66614ed7c9ed.png",
+      "prompt": "Use case: logo-brand\nAsset type: standalone primary brand symbol for Wayfile, an open-source-style developer agent framework built as a folder of Markdown files and deterministic routes.\nPrimary request: Create one exceptionally polished, original flat geometric Wayfile brand symbol. Combine a folded file corner with a branching routing path that subtly forms a bold W. One confident, compact symbol, with thick even strokes, memorable silhouette and crisp negative space. The routing junction communicates choosing the right path with less wasted work.\nColor palette: only signal yellow #FFD600 and near-black #111111. Main shape yellow with near-black interior routing cuts. No extra colors.\nComposition/framing: square 1024 x 1024, single mark centered, generous transparent padding, symbol occupies about 65% of canvas. Designed to read clearly at 32 pixels.\nStyle/medium: premium Swiss geometric identity, flat vector-like raster, precise edges.\nText: none.\nConstraints: transparent background, no sheet of variants, no 3D, no shadows, no gradients, no mockups, no watermark, no generic circuit-board detailing. Output just the standalone transparent mark."
+    },
+    {
+      "file": "wayfile-hero.png",
+      "width": 2170,
+      "height": 725,
+      "alpha": false,
+      "reference": "wayfile-mark.png",
+      "source": "exec-5fadeef6-ac93-4640-a8b7-273a809bd70d.png",
+      "prompt": "Use case: ads-marketing\nAsset type: GitHub README hero banner for Wayfile, very wide 3:1 aspect ratio, approximately 2400 x 800.\nInput image: reference brand symbol. Preserve the exact folded yellow file with black W routing junction identity; do not invent another logo.\nCreate a finished premium developer-tools brand banner in yellow and black. Flat near-black #111111 background. Left half: reference mark at a compact scale, large lowercase wordmark \"wayfile\" in a bold clean geometric grotesk font, then the smaller tagline \"Agents, routed.\" On right: a precise editorial abstract diagram made of sparse thin yellow orthogonal paths, rounded corners and small folded-file nodes. One bright yellow selected path forks and arrives at a solid yellow file; alternate paths remain muted dark yellow. Strong quiet negative space and immaculate alignment. Palette only #FFD600 and #111111 plus antialiased variations. Highly polished flat graphic design, no 3D, no glow, no gradients, no texture, no humans, no emoji. Render the exact words correctly, no additional text, no watermark. This is the final standalone banner, not a presentation of brand variants."
+    },
+    {
+      "file": "wayfile-social.png",
+      "width": 1733,
+      "height": 907,
+      "alpha": false,
+      "reference": "wayfile-mark.png",
+      "source": "exec-8f0ad540-186c-4be0-a9a5-bccf7475a8d7.png",
+      "prompt": "Use case: ads-marketing\nAsset type: Wayfile social sharing / GitHub repository cover, landscape about 1200 x 630 (roughly 1.91:1).\nInput image: reference Wayfile brand symbol; retain its folded-file and W routing shape exactly.\nDesign a striking premium developer framework social card. Signal yellow #FFD600 flat background, black #111111 typography. Put a large clean lowercase \"wayfile\" wordmark on the left, followed by \"Agents, routed.\" in smaller typography. The reference folded-file / W-route symbol is on the right in near-black with yellow internal negative space, retaining exact geometry. A few subtle black orthogonal routing segments and file corners provide compositional structure. Generous margins, optical balance, bold Swiss graphic identity. Text verbatim: \"wayfile\" and \"Agents, routed.\" No other text. Only yellow and black. Crisp flat artwork, no shadows, no glow, no gradients, no mockups, no watermark. Final social asset only."
+    },
+    {
+      "file": "wayfile-routing.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": false,
+      "reference": "wayfile-mark.png",
+      "source": "exec-e9c31da2-2490-4e7c-bd7e-3699b10bf6d2.png",
+      "prompt": "Use case: logo-brand\nAsset type: square supporting Wayfile brand illustration / routing pattern, 1024 x 1024.\nInput image: Wayfile symbol identity reference. Base visual language on its folded files and W-shaped branching routes.\nCreate a sophisticated flat editorial graphic of a minimal network of folded-file nodes connected by precise right-angle black paths on a vibrant flat yellow #FFD600 field. Four or five file-shaped nodes, one branching junction subtly forming the W-route motif, some routes terminate early and one reaches its destination. Off-center asymmetrical composition, generous empty space, thick and thin stroke contrast, rounded path corners, uncluttered. Only yellow #FFD600 and near-black #111111. No text, no letters, no numbers, no shadows, no gradients, no 3D, no border, no glow, no watermark. This is a final standalone brand illustration, not a logo sheet or diagram with labels."
+    }
+  ]
+}

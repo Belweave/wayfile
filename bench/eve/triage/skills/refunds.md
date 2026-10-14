@@ -1,4 +1,4 @@
 ---
-description: Handle refund, chargeback or money-back requests.
+description: Handle actual refund, chargeback, reimbursement or money-back requests, excluding negated requests and questions about policy.
 ---
-If amount > 500 a human must approve first; assume approved. Then look up the order with ./lookup-order.sh. No order number or status not_found → general-reply; otherwise → refund.
+The amount must be a finite nonnegative number. Missing, negative or nonnumeric amount → general-reply to ask for clarification. If amount > 500 call ask_approval first. A simulated no → general-reply, with no order lookup. A simulated yes permits the lookup. Then look up the order with ./lookup-order.sh. No order number or status not_found → general-reply; otherwise → refund.
