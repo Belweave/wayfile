@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "status": { "type": "string", "enum": ["passed", "failed", "missing"] },
+    "package_manager": { "type": ["string", "null"] },
+    "lockfile": { "type": ["string", "null"] },
+    "scripts": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "command": { "type": "string" }, "exit_code": { "type": ["integer", "null"] }, "passed": { "type": "boolean" }, "stdout": { "type": "string" }, "stderr": { "type": "string" }, "error": { "type": ["string", "null"] } }, "required": ["name", "command", "exit_code", "passed", "stdout", "stderr", "error"], "additionalProperties": false }, "maxItems": 8 },
+    "url_check": { "type": ["object", "null"], "properties": { "url": { "type": "string" }, "status": { "type": ["integer", "null"] }, "passed": { "type": "boolean" }, "error": { "type": ["string", "null"] } }, "required": ["url", "status", "passed", "error"], "additionalProperties": false },
+    "reason": { "type": ["string", "null"], "maxLength": 4000 },
+    "repairs_remaining": { "type": "integer", "minimum": 0, "maximum": 5 }
+  },
+  "required": ["status", "package_manager", "lockfile", "scripts", "url_check", "reason", "repairs_remaining"],
+  "additionalProperties": false
+}

@@ -1,0 +1,33 @@
+{
+  "name": "wayfile",
+  "version": "0.2.0",
+  "private": true,
+  "description": "File-based agent framework: fast deterministic routes, focused models, bounded tool harnesses.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./harness": "./src/harness.js",
+    "./tools": "./src/tools.js",
+    "./parse": "./src/parse.js",
+    "./run": "./src/run.js",
+    "./model": "./src/model.js",
+    "./contracts": "./src/contracts.js",
+    "./logic": "./src/logic.js",
+    "./check": "./src/check.js",
+    "./explain": "./src/explain.js",
+    "./notify": "./src/notify.js"
+  },
+  "bin": {
+    "wayfile": "bin/wayfile.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "license": "UNLICENSED"
+}

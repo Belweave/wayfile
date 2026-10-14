@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "scope": "32 public development routing cases; fixture evidence and simulated approvals; no universal framework superiority claim",
+  "run_id": "2026-10-13T23-16-59-162Z-challenge-314c3ec7",
+  "at": "2026-10-13T23:16:59.163Z",
+  "requested_model": "anthropic/claude-haiku-5.5",
+  "actual_eve_version": "0.79.0",
+  "source_report_sha256": "527d828b41cbe14983c3ace9e3594b304c0e659a32d05937ae7965370ca688d9",
+  "config_hash": "af4e883893244314d357c879950ffa4c3e8b8a6ac55f7201a62a72a85c7f1c92",
+  "dataset": {
+    "name": "challenge",
+    "version": 1,
+    "role": "development",
+    "labelProvenance": "Same-team manual policy labels with written rationales; public and available for tuning. No independent holdout claim.",
+    "limits": [
+      "Order lookup uses the example parity fixture, not a real order database.",
+      "Approval answers are explicitly simulated.",
+      "Generated-output and multi-hop contract checks live in the separate local conformance suite."
+    ],
+    "corpusHash": "95ca2bdd3baec0de7ef2746376837be61484e2a23d3aaa95b367e4adbde21dc6",
+    "labelsHash": "32d9cdb7ae438d3fc93ad4553399b7085fd1c5208c8baca361ffa730591fec64"
+  },
+  "source_changed": false,
+  "provider_caching": "observed, not controlled cold",
+  "token_definition": "input + output + cacheRead + cacheWrite; token counts are distinct from API cost",
+  "results": {
+    "wayfile": {
+      "n": 32,
+      "correct": 32,
+      "successes": 32,
+      "calls": 26,
+      "toolCalls": 13,
+      "usage": {
+        "input": 2287,
+        "output": 2285,
+        "cacheRead": 14033,
+        "cacheWrite": 3931,
+        "cost": 0.0020029050000000006
+      },
+      "tokens": 22536,
+      "usd": 0.0020029050000000006,
+      "usdPerSuccess": 6.259078125000002e-05,
+      "msMedian": 1193,
+      "msP95": 2469,
+      "costMeasured": true,
+      "unknownCostCalls": 0
+    },
+    "bash": {
+      "n": 32,
+      "correct": 30,
+      "successes": 27,
+      "calls": 46,
+      "toolCalls": 14,
+      "usage": {
+        "input": 8410,
+        "output": 5433,
+        "cacheRead": 41116,
+        "cacheWrite": 6222,
+        "cost": 0.00474641
+      },
+      "tokens": 61181,
+      "usd": 0.00474641,
+      "usdPerSuccess": 0.00017579296296296298,
+      "msMedian": 1477,
+      "msP95": 3682,
+      "costMeasured": true,
+      "unknownCostCalls": 0
+    },
+    "eve_runtime": {
+      "n": 32,
+      "correct": 30,
+      "successes": 29,
+      "calls": 48,
+      "toolCalls": 15,
+      "usage": {
+        "input": 8419,
+        "output": 7226,
+        "cacheRead": 76272,
+        "cacheWrite": 10968,
+        "cost": 0.006588619999999999
+      },
+      "tokens": 102885,
+      "usd": 0.006588619999999999,
+      "usdPerSuccess": 0.00022719379310344825,
+      "msMedian": 1838,
+      "msP95": 4334,
+      "costMeasured": true,
+      "unknownCostCalls": 0
+    }
+  }
+}

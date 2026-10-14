@@ -4,14 +4,20 @@ flowchart TD
   bug_intake(("bug-intake"))
   general_reply(("general-reply"))
   lookup_order[/"lookup-order"/]
+  refund_request["refund-request"]
   refund(("refund"))
   triage{{"triage"}}
   ask_approval -->|"approval == #quot;yes#quot;"| lookup_order
   ask_approval -->|"otherwise"| general_reply
   lookup_order -->|"order.status == #quot;not_found#quot;"| general_reply
   lookup_order -->|"otherwise"| refund
-  triage -->|"ticket.amount > 500 && ticket.body ~ /refund#124;chargeback#124;money back/i"| ask_approval
-  triage -->|"ticket.body ~ /refund#124;chargeback#124;money back/i"| lookup_order
-  triage -->|"ticket.body ~ /password#124;log ?in#124;2fa#124;locked out/i"| account_help
+  refund_request -->|"ticket.amount > 500"| ask_approval
+  refund_request -->|"ticket.amount >= 0 && ticket.amount <= 500"| lookup_order
+  refund_request -->|"otherwise"| general_reply
+  triage -->|"ticket.body ~ /^\s*(?:please\s+)?refund(?:\s+(?:order #?\d+#124;please))?[.!?\s]*$/i"| refund_request
+  triage -->|"ticket.body ~ /^\s*i want a chargeback for order #?\d+[.!?\s]*$/i"| refund_request
+  triage -->|"ticket.body ~ /^\s*(?:i am\s+)?locked out[.!?\s]*$/i"| account_help
+  triage -.->|"judge: is the sender actually requesting a refund, chargeback or money back?"| refund_request
+  triage -.->|"judge: is the sender having trouble with a password, login, two-factor authentication or account access?"| account_help
   triage -.->|"judge: is this a bug report with steps to reproduce?"| bug_intake
   triage -->|"otherwise"| general_reply

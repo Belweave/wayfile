@@ -1,0 +1,26 @@
+{
+  "name": "waycode",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Conversational Wayfile coding agent with managed tools and verified publication.",
+  "type": "module",
+  "main": "./src/coding.js",
+  "exports": {
+    ".": "./src/coding.js"
+  },
+  "bin": {
+    "waycode": "bin/waycode.js"
+  },
+  "dependencies": {
+    "wayfile": "file:../../packages/wayfile"
+  },
+  "files": [
+    "bin",
+    "src",
+    "agent"
+  ],
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "license": "UNLICENSED"
+}

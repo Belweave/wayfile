@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["facts", "unknowns"],
+  "properties": {
+    "facts": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "provenance"],
+        "properties": {
+          "claim": { "type": "string", "minLength": 1, "maxLength": 400 },
+          "provenance": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["file", "excerpt"],
+              "properties": {
+                "file": { "type": "string", "enum": ["fixtures/project.md"] },
+                "excerpt": { "type": "string", "minLength": 1, "maxLength": 400 },
+                "line": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "maxItems": 6,
+      "items": { "type": "string", "minLength": 1, "maxLength": 400 }
+    }
+  }
+}

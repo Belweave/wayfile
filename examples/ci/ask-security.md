@@ -1,7 +1,7 @@
 ---
 kind: ask
 ask_kind: approval
-needs: [ci.job]
+needs: [ci.job, ci.log]
 sets: [security.approval]
 ---
 # Secret in CI log
